@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>單字卡格式化工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        h1 {
+            color: #333;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            font-size: 16px;
+        }
+        #output {
+            white-space: pre-wrap;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 10px;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .instructions {
+            background-color: #e9ecef;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>單字卡格式化工具</h1>
+    <div class="instructions">
+        <h2>工具說明：</h2>
+        <p>本工具用於將中英文混合的文本格式化為 Quizlet 匯入所需的格式。</p>
+        <p><strong>操作步驟：</strong></p>
+        <ol>
+            <li>在下面的輸入框中輸入中英文對照文本，每行一組中英文對照。例如：</li>
+            <pre>apple 蘋果</pre>
+            <pre>banana</pre>
+            <pre>香蕉</pre>
+            <li>點擊「格式化」按鈕。</li>
+            <li>查看結果，結果會以 <code>英文,中文</code> 的格式顯示在下方。</li>
+            <li>將結果複製並導入到電腦版 Quizlet 中使用。</li>
+            <li>"術語和定義之間"選擇逗號comma，"卡片之間"選擇換行newline</li>
+            <li>查看結果，然後點擊「複製結果」按鈕將結果複製到剪貼板。</li>
+        </ol>
+    </div>
+    <textarea id="inputText" placeholder="請輸入中英文對照文本..."></textarea>
+    <button onclick="formatPairs()">格式化</button>
+    <button onclick="copyToClipboard()">複製結果</button>
+    <h2>格式化結果：</h2>
+    <div id="output">結果會顯示在這裡。</div>
+
+    <script>
+        function formatPairs() {
+            const text = document.getElementById("inputText").value;
+            const lines = text.split(/\n/);
+            let formattedOutput = "";
+            let pendingEnglish = null;
+
+            lines.forEach(line => {
+                const chinesePart = line.match(/[\u4e00-\u9fff]+/);
+                const englishPart = line.match(/[A-Za-z\s]+/);
+
+                if (chinesePart && englishPart) {
+                    formattedOutput += `${englishPart[0].trim()},${chinesePart[0].trim()}\n`;
+                    pendingEnglish = null;
+                } else if (englishPart) {
+                    pendingEnglish = englishPart[0].trim();
+                } else if (chinesePart && pendingEnglish) {
+                    formattedOutput += `${pendingEnglish},${chinesePart[0].trim()}\n`;
+                    pendingEnglish = null;
+                }
+            });
+
+            document.getElementById("output").textContent = formattedOutput || "未檢測到有效的中英文配對。";
+        }
+
+        function copyToClipboard() {
+            const outputText = document.getElementById("output").textContent;
+            if (outputText.trim() === "結果會顯示在這裡。" || outputText.trim() === "") {
+                alert("沒有可複製的內容！");
+                return;
+            }
+            navigator.clipboard.writeText(outputText).then(() => {
+                alert("結果已複製到剪貼板！");
+            }).catch(err => {
+                console.error("複製失敗：", err);
+                alert("無法複製內容，請手動複製。");
+            });
+        }
+    </script>
+</body>
+</html>

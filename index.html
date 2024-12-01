@@ -4,6 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>單字卡格式化工具</title>
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="簡單易用的單字卡格式化工具，幫助您快速將中英文對照文本轉換為適合 Quizlet 匯入的格式。">
+    <meta name="keywords" content="單字卡格式化工具, Quizlet, 中英文對照, 線上工具, 中英文配對, 單字學習, 格式化工具">
+    <meta name="robots" content="index, follow">
+
+    <!-- Social Media Meta Tags -->
+    <meta property="og:title" content="單字卡格式化工具 - 中英文文本轉換助手">
+    <meta property="og:description" content="快速格式化中英文對照文本，輕鬆適配 Quizlet 和其他學習工具，提升學習效率！">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://iamsvito.github.io/Quizlet/"> <!-- 替換為實際網頁網址 -->
+
+    <!-- Twitter Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="單字卡格式化工具 - 中英文文本轉換助手">
+    <meta name="twitter:description" content="快速格式化中英文對照文本，適配 Quizlet 和學習工具。讓您的學習更高效！">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -43,6 +58,12 @@
         button:hover {
             background-color: #0056b3;
         }
+        .reset {
+            background-color: #FF6347;
+        }
+        .reset:hover {
+            background-color: #CC4F39;
+        }
         .instructions {
             background-color: #e9ecef;
             border: 1px solid #ccc;
@@ -75,7 +96,7 @@
     <button onclick="copyToClipboard()">複製結果</button>
     <h2>格式化結果：</h2>
     <div id="output">結果會顯示在這裡。</div>
-
+    <button class="reset" onclick="resetPage()">重置</button>
     <script>
         function formatPairs() {
             const text = document.getElementById("inputText").value;
@@ -113,6 +134,10 @@
                 console.error("複製失敗：", err);
                 alert("無法複製內容，請手動複製。");
             });
+        }
+        function resetPage() {
+            document.getElementById("inputText").value = ""; // 清空輸入框
+            document.getElementById("output").textContent = "結果會顯示在這裡。"; // 重置結果區域
         }
     </script>
 </body>

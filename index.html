@@ -19,6 +19,8 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="單字卡格式化工具 - 中英文文本轉換助手">
     <meta name="twitter:description" content="快速格式化中英文對照文本，適配 Quizlet 和學習工具。讓您的學習更高效！">
+
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -103,10 +105,12 @@
             const lines = text.split(/\n/);
             let formattedOutput = "";
             let pendingEnglish = null;
+            let errorLines = [];
 
-            lines.forEach(line => {
-                const chinesePart = line.match(/[\u4e00-\u9fff]+/);
-                const englishPart = line.match(/[A-Za-z\s]+/);
+            lines.forEach((line, index) => {
+                const cleanedLine = line.replace(/[\u3000\s]+/g, " ").trim();
+                const chinesePart = cleanedLine.match(/[\u4e00-\u9fff，。！？、；：“”（）《》「」【】]+/);
+                const englishPart = cleanedLine.match(/[A-Za-z0-9\s]+/);
 
                 if (chinesePart && englishPart) {
                     formattedOutput += `${englishPart[0].trim()},${chinesePart[0].trim()}\n`;
@@ -116,10 +120,25 @@
                 } else if (chinesePart && pendingEnglish) {
                     formattedOutput += `${pendingEnglish},${chinesePart[0].trim()}\n`;
                     pendingEnglish = null;
+                } else {
+                    errorLines.push({ line: index + 1, content: line });
                 }
             });
 
-            document.getElementById("output").textContent = formattedOutput || "未檢測到有效的中英文配對。";
+            if (formattedOutput) {
+                document.getElementById("output").textContent = formattedOutput;
+            } else {
+                document.getElementById("output").textContent = "未檢測到有效的中英文配對。";
+            }
+
+            if (errorLines.length > 0) {
+                console.warn("以下行格式異常，已跳過：", errorLines);
+                let errorMessage = "以下行無法處理，已跳過：\n";
+                errorLines.forEach(err => {
+                    errorMessage += `第 ${err.line} 行: ${err.content}\n`;
+                });
+                alert(errorMessage.trim());
+            }
         }
 
         function copyToClipboard() {

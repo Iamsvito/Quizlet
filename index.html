@@ -93,13 +93,21 @@
             <li>查看結果，然後點擊「複製結果」按鈕將結果複製到剪貼板。</li>
         </ol>
     </div>
-    <textarea id="inputText" placeholder="請輸入中英文對照文本..."></textarea>
+    <div id="lineCount">目前行數：0 行</div>
+    <textarea id="inputText" placeholder="請輸入中英文對照文本..." oninput="updateLineCount()"></textarea>
     <button onclick="formatPairs()">格式化</button>
     <button onclick="copyToClipboard()">複製結果</button>
     <h2>格式化結果：</h2>
     <div id="output">結果會顯示在這裡。</div>
     <button class="reset" onclick="resetPage()">重置</button>
     <script>
+        function updateLineCount() {
+            const text = document.getElementById("inputText").value;
+            const lineCount = text.split(/\n/).length; 
+            document.getElementById("lineCount").textContent = `目前行數：${lineCount} 行`;
+        }
+
+
         function formatPairs() {
             const text = document.getElementById("inputText").value;
             const lines = text.split(/\n/);
@@ -140,7 +148,6 @@
                 alert(errorMessage.trim());
             }
         }
-
         function copyToClipboard() {
             const outputText = document.getElementById("output").textContent;
             if (outputText.trim() === "結果會顯示在這裡。" || outputText.trim() === "") {
@@ -157,7 +164,9 @@
         function resetPage() {
             document.getElementById("inputText").value = ""; // 清空輸入框
             document.getElementById("output").textContent = "結果會顯示在這裡。"; // 重置結果區域
+            updateLineCount(); // 更新行數
         }
     </script>
 </body>
 </html>
+

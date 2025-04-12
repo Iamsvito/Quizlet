@@ -4,22 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>單字卡格式化工具</title>
-    <!-- SEO Meta Tags -->
     <meta name="description" content="簡單易用的單字卡格式化工具，幫助您快速將中英文對照文本轉換為適合 Quizlet 匯入的格式。">
     <meta name="keywords" content="單字卡格式化工具, Quizlet, 中英文對照, 線上工具, 中英文配對, 單字學習, 格式化工具">
     <meta name="robots" content="index, follow">
 
-    <!-- Social Media Meta Tags -->
     <meta property="og:title" content="單字卡格式化工具 - 中英文文本轉換助手">
     <meta property="og:description" content="快速格式化中英文對照文本，輕鬆適配 Quizlet 和其他學習工具，提升學習效率！">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://iamsvito.github.io/Quizlet/"> <!-- 替換為實際網頁網址 -->
+    <meta property="og:url" content="https://iamsvito.github.io/Quizlet/">
 
-    <!-- Twitter Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="單字卡格式化工具 - 中英文文本轉換助手">
     <meta name="twitter:description" content="快速格式化中英文對照文本，適配 Quizlet 和學習工具。讓您的學習更高效！">
-
 
     <style>
         body {
@@ -79,18 +75,14 @@
     <h1>單字卡格式化工具</h1>
     <div class="instructions">
         <h2>工具說明：</h2>
-        <p>本工具用於將中英文混合的文本格式化為 Quizlet 匯入所需的格式。</p>
-        <p><strong>操作步驟：</strong></p>
         <ol>
-            <li>在下面的輸入框中輸入中英文對照文本(記得在中英文對照文本內不可有任何標點符號且中文字詞不可出現空格)，每行一組中英文對照。例如：</li>
-            <pre>apple 蘋果</pre>
-            <pre>banana</pre>
-            <pre>香蕉</pre>
-            <li>點擊「格式化」按鈕。</li>
-            <li>查看結果，結果會以 <code>英文,中文</code> 的格式顯示在下方。</li>
-            <li>將結果複製並導入到電腦版 Quizlet 中使用。</li>
-            <li>"術語和定義之間"選擇逗號comma，"卡片之間"選擇換行newline</li>
-            <li>查看結果，然後點擊「複製結果」按鈕將結果複製到剪貼板。</li>
+            <li>在下方輸入中英文對照，每行一組，或每兩行配對，支援標點符號。</li>
+            <li>例如：
+                <pre>apple，蘋果</pre>
+                <pre>banana.</pre>
+                <pre>香蕉！</pre>
+            </li>
+            <li>點擊「格式化」可轉為 Quizlet 格式：英文,中文</li>
         </ol>
     </div>
     <div id="lineCount">目前行數：0 行</div>
@@ -100,6 +92,7 @@
     <h2>格式化結果：</h2>
     <div id="output">結果會顯示在這裡。</div>
     <button class="reset" onclick="resetPage()">重置</button>
+
     <script>
         function updateLineCount() {
             const text = document.getElementById("inputText").value;
@@ -107,6 +100,9 @@
             document.getElementById("lineCount").textContent = `目前行數：${lineCount} 行`;
         }
 
+        function cleanPunctuation(str) {
+            return str.replace(/[，。！？、；：“”（）《》「」【】,.!?;:'"()<>[\]{}]/g, '').trim();
+        }
 
         function formatPairs() {
             const text = document.getElementById("inputText").value;
@@ -116,17 +112,19 @@
             let errorLines = [];
 
             lines.forEach((line, index) => {
-                const cleanedLine = line.replace(/[\u3000\s]+/g, " ").trim();
-                const chinesePart = cleanedLine.match(/[\u4e00-\u9fff，。！？、；：“”（）《》「」【】]+/);
-                const englishPart = cleanedLine.match(/[A-Za-z0-9\s]+/);
+                const cleanedLine = line.trim().replace(/\s+/g, " ");
+                const lineWithoutPunctuation = cleanPunctuation(cleanedLine);
+
+                const chinesePart = lineWithoutPunctuation.match(/[\u4e00-\u9fff]+/g);
+                const englishPart = lineWithoutPunctuation.match(/[A-Za-z0-9 ]+/g);
 
                 if (chinesePart && englishPart) {
-                    formattedOutput += `${englishPart[0].trim()},${chinesePart[0].trim()}\n`;
+                    formattedOutput += `${englishPart.join(' ').trim()},${chinesePart.join('').trim()}\n`;
                     pendingEnglish = null;
                 } else if (englishPart) {
-                    pendingEnglish = englishPart[0].trim();
+                    pendingEnglish = englishPart.join(' ').trim();
                 } else if (chinesePart && pendingEnglish) {
-                    formattedOutput += `${pendingEnglish},${chinesePart[0].trim()}\n`;
+                    formattedOutput += `${pendingEnglish},${chinesePart.join('').trim()}\n`;
                     pendingEnglish = null;
                 } else {
                     errorLines.push({ line: index + 1, content: line });
@@ -134,13 +132,12 @@
             });
 
             if (formattedOutput) {
-                document.getElementById("output").textContent = formattedOutput;
+                document.getElementById("output").textContent = formattedOutput.trim();
             } else {
                 document.getElementById("output").textContent = "未檢測到有效的中英文配對。";
             }
 
             if (errorLines.length > 0) {
-                console.warn("以下行格式異常，已跳過：", errorLines);
                 let errorMessage = "以下行無法處理，已跳過：\n";
                 errorLines.forEach(err => {
                     errorMessage += `第 ${err.line} 行: ${err.content}\n`;
@@ -148,6 +145,7 @@
                 alert(errorMessage.trim());
             }
         }
+
         function copyToClipboard() {
             const outputText = document.getElementById("output").textContent;
             if (outputText.trim() === "結果會顯示在這裡。" || outputText.trim() === "") {
@@ -161,10 +159,11 @@
                 alert("無法複製內容，請手動複製。");
             });
         }
+
         function resetPage() {
-            document.getElementById("inputText").value = ""; // 清空輸入框
-            document.getElementById("output").textContent = "結果會顯示在這裡。"; // 重置結果區域
-            updateLineCount(); // 更新行數
+            document.getElementById("inputText").value = "";
+            document.getElementById("output").textContent = "結果會顯示在這裡。";
+            updateLineCount();
         }
     </script>
 </body>

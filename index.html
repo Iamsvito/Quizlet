@@ -79,8 +79,6 @@
             <li>在下方輸入中英文對照，每行一組，或每兩行配對，支援標點符號。</li>
             <li>例如：
                 <pre>apple，蘋果</pre>
-                <pre>banana.</pre>
-                <pre>香蕉！</pre>
             </li>
             <li>點擊「格式化」可轉為 Quizlet 格式：英文,中文</li>
         </ol>
@@ -94,78 +92,49 @@
     <button class="reset" onclick="resetPage()">重置</button>
 
     <script>
-        function updateLineCount() {
-            const text = document.getElementById("inputText").value;
-            const lineCount = text.split(/\n/).length; 
-            document.getElementById("lineCount").textContent = `目前行數：${lineCount} 行`;
-        }
+    function formatPairs() {
+        const text = document.getElementById("inputText").value;
+        const lines = text.split(/\n/);
+        let formattedOutput = "";
+        let errorLines = [];
 
-        function cleanPunctuation(str) {
-            return str.replace(/[，。！？、；：“”（）《》「」【】,.!?;:'"()<>[\]{}]/g, '').trim();
-        }
+        lines.forEach((line, index) => {
+            const cleanedLine = line.trim();
 
-        function formatPairs() {
-            const text = document.getElementById("inputText").value;
-            const lines = text.split(/\n/);
-            let formattedOutput = "";
-            let pendingEnglish = null;
-            let errorLines = [];
+            // 抓出第一段英文 (包含標點與 /)
+            const englishMatch = cleanedLine.match(/^[A-Za-z0-9\s.,!?;:'"()\/\[\]{}<>-]+/);
 
-            lines.forEach((line, index) => {
-                const cleanedLine = line.trim().replace(/\s+/g, " ");
-                const lineWithoutPunctuation = cleanPunctuation(cleanedLine);
+            // 英文後面的部分視為中文部分
+            let englishPart = "";
+            let chinesePart = "";
 
-                const chinesePart = lineWithoutPunctuation.match(/[\u4e00-\u9fff]+/g);
-                const englishPart = lineWithoutPunctuation.match(/[A-Za-z0-9 ]+/g);
-
-                if (chinesePart && englishPart) {
-                    formattedOutput += `${englishPart.join(' ').trim()},${chinesePart.join('').trim()}\n`;
-                    pendingEnglish = null;
-                } else if (englishPart) {
-                    pendingEnglish = englishPart.join(' ').trim();
-                } else if (chinesePart && pendingEnglish) {
-                    formattedOutput += `${pendingEnglish},${chinesePart.join('').trim()}\n`;
-                    pendingEnglish = null;
-                } else {
-                    errorLines.push({ line: index + 1, content: line });
-                }
-            });
-
-            if (formattedOutput) {
-                document.getElementById("output").textContent = formattedOutput.trim();
+            if (englishMatch) {
+                englishPart = englishMatch[0].trim();
+                chinesePart = cleanedLine.slice(englishPart.length).trim();
+                formattedOutput += `${englishPart},${chinesePart}\n`;
             } else {
-                document.getElementById("output").textContent = "未檢測到有效的中英文配對。";
+                errorLines.push({ line: index + 1, content: line });
             }
+        });
 
-            if (errorLines.length > 0) {
-                let errorMessage = "以下行無法處理，已跳過：\n";
-                errorLines.forEach(err => {
-                    errorMessage += `第 ${err.line} 行: ${err.content}\n`;
-                });
-                alert(errorMessage.trim());
-            }
+        if (formattedOutput) {
+            document.getElementById("output").textContent = formattedOutput.trim();
+        } else {
+            document.getElementById("output").textContent = "未檢測到有效的中英文配對。";
         }
 
-        function copyToClipboard() {
-            const outputText = document.getElementById("output").textContent;
-            if (outputText.trim() === "結果會顯示在這裡。" || outputText.trim() === "") {
-                alert("沒有可複製的內容！");
-                return;
-            }
-            navigator.clipboard.writeText(outputText).then(() => {
-                alert("結果已複製到剪貼板！");
-            }).catch(err => {
-                console.error("複製失敗：", err);
-                alert("無法複製內容，請手動複製。");
+        if (errorLines.length > 0) {
+            let errorMessage = "以下行無法處理，已跳過：\n";
+            errorLines.forEach(err => {
+                errorMessage += `第 ${err.line} 行: ${err.content}\n`;
             });
+            alert(errorMessage.trim());
         }
+    }
+</script>
 
-        function resetPage() {
-            document.getElementById("inputText").value = "";
-            document.getElementById("output").textContent = "結果會顯示在這裡。";
-            updateLineCount();
-        }
-    </script>
+
+
 </body>
 </html>
 

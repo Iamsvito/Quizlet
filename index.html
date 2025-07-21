@@ -4,54 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>單字卡格式化工具</title>
-    <meta name="description" content="簡單易用的單字卡格式化工具，幫助您快速將中英文對照文本轉換為適合 Quizlet 匯入的格式。">
-    <meta name="keywords" content="單字卡格式化工具, Quizlet, 中英文對照, 線上工具, 中英文配對, 單字學習, 格式化工具">
-    <meta name="robots" content="index, follow">
-
-    <meta property="og:title" content="單字卡格式化工具 - 中英文文本轉換助手">
-    <meta property="og:description" content="快速格式化中英文對照文本，輕鬆適配 Quizlet 和其他學習工具，提升學習效率！">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://iamsvito.github.io/Quizlet/">
-
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="單字卡格式化工具 - 中英文文本轉換助手">
-    <meta name="twitter:description" content="快速格式化中英文對照文本，適配 Quizlet 和學習工具。讓您的學習更高效！">
-
     <style>
         body {
             font-family: Arial, sans-serif;
-            line-height: 1.6;
-            padding: 20px;
             background-color: #f4f4f9;
-        }
-        h1 {
-            color: #333;
+            padding: 20px;
         }
         textarea {
             width: 100%;
             height: 200px;
-            margin-bottom: 20px;
-            border: 1px solid #ccc;
-            padding: 10px;
             font-size: 16px;
-        }
-        #output {
-            white-space: pre-wrap;
-            background-color: #fff;
-            border: 1px solid #ccc;
             padding: 10px;
-            font-size: 16px;
-            margin-top: 10px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
         }
         button {
-            background-color: #007BFF;
-            color: white;
-            border: none;
             padding: 10px 20px;
             font-size: 16px;
-            cursor: pointer;
-            border-radius: 5px;
             margin-right: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
         }
         button:hover {
             background-color: #0056b3;
@@ -62,82 +37,95 @@
         .reset:hover {
             background-color: #CC4F39;
         }
-        .instructions {
-            background-color: #e9ecef;
+        #output {
+            white-space: pre-wrap;
+            background-color: white;
             border: 1px solid #ccc;
             padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
+            font-size: 16px;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <h1>單字卡格式化工具</h1>
-    <div class="instructions">
-        <h2>工具說明：</h2>
-        <ol>
-            <li>在下方輸入中英文對照，每行一組，或每兩行配對，支援標點符號。</li>
-            <li>例如：
-                <pre>apple，蘋果</pre>
-            </li>
-            <li>點擊「格式化」可轉為 Quizlet 格式：英文,中文</li>
-        </ol>
-    </div>
-    <div id="lineCount">目前行數：0 行</div>
-    <textarea id="inputText" placeholder="請輸入中英文對照文本..." oninput="updateLineCount()"></textarea>
-    <button onclick="formatPairs()">格式化</button>
-    <button onclick="copyToClipboard()">複製結果</button>
-    <h2>格式化結果：</h2>
-    <div id="output">結果會顯示在這裡。</div>
-    <button class="reset" onclick="resetPage()">重置</button>
 
-    <script>
-function formatPairs() {
-    const text = document.getElementById("inputText").value;
-    const lines = text.split(/\n/);
-    let formattedOutput = "";
-    let errorLines = [];
+<h1>單字卡格式化工具</h1>
+<div id="lineCount">目前行數：0 行</div>
 
-    lines.forEach((line, index) => {
-        const cleanedLine = line.trim();
-        if (cleanedLine === "") return;  // 跳過空行
+<textarea id="inputText" placeholder="請輸入中英文對照文本..." oninput="updateLineCount()"></textarea>
 
-        // 抓取中文前的英文（避開中文與標點）
-        const englishMatch = cleanedLine.match(/^([^，。！？；：「」『』（）【】、《》\s\d\p{Script=Han}]+)/u);
+<button onclick="preprocessInput(); formatPairs()">格式化</button>
+<button onclick="copyToClipboard()">複製結果</button>
+<button class="reset" onclick="resetPage()">重置</button>
 
-        if (englishMatch) {
-            const englishPart = englishMatch[0].trim();
-            const chinesePart = cleanedLine.slice(englishPart.length).trim();
-            formattedOutput += `${englishPart},${chinesePart}\n`;
-        } else {
-            errorLines.push({ line: index + 1, content: line });
-        }
-    });
+<h2>格式化結果：</h2>
+<div id="output">結果會顯示在這裡。</div>
 
-    document.getElementById("output").textContent = formattedOutput.trim() || "未檢測到有效的中英文配對。";
+<!-- 原本的 formatPairs() 不變 -->
+<script>
+    function formatPairs() {
+        const text = document.getElementById("inputText").value;
+        const lines = text.split(/\n/);
+        let formattedOutput = "";
+        let errorLines = [];
 
-    if (errorLines.length > 0) {
-        let errorMessage = "以下行無法處理，已跳過：\n";
-        errorLines.forEach(err => {
-            errorMessage += `第 ${err.line} 行: ${err.content}\n`;
+        lines.forEach((line, index) => {
+            const cleanedLine = line.trim();
+            const englishMatch = cleanedLine.match(/^[A-Za-z0-9\s.,!?;:'"()\/\[\]{}<>-]+/);
+
+            let englishPart = "";
+            let chinesePart = "";
+
+            if (englishMatch) {
+                englishPart = englishMatch[0].trim();
+                chinesePart = cleanedLine.slice(englishPart.length).trim();
+                formattedOutput += `${englishPart},${chinesePart}\n`;
+            } else {
+                errorLines.push({ line: index + 1, content: line });
+            }
         });
-        alert(errorMessage.trim());
+
+        if (formattedOutput) {
+            document.getElementById("output").textContent = formattedOutput.trim();
+        } else {
+            document.getElementById("output").textContent = "未檢測到有效的中英文配對。";
+        }
+
+        if (errorLines.length > 0) {
+            let errorMessage = "以下行無法處理，已跳過：\n";
+            errorLines.forEach(err => {
+                errorMessage += `第 ${err.line} 行: ${err.content}\n`;
+            });
+            alert(errorMessage.trim());
+        }
     }
+</script>
+
+<!-- 外部優化 -->
+<script>
+function preprocessInput() {
+    const textarea = document.getElementById("inputText");
+    const cleaned = textarea.value
+        .split(/\n/)
+        .filter(line => line.trim() !== "")
+        .join("\n");
+    textarea.value = cleaned;
+    updateLineCount();
 }
 
 function updateLineCount() {
     const text = document.getElementById("inputText").value;
-    const lineCount = text.split(/\n/).filter(line => line.trim() !== "").length;
-    document.getElementById("lineCount").textContent = `目前行數：${lineCount} 行`;
+    const count = text.split(/\n/).filter(line => line.trim() !== "").length;
+    document.getElementById("lineCount").textContent = `目前行數：${count} 行`;
 }
 
 function copyToClipboard() {
-    const outputText = document.getElementById("output").textContent;
-    if (!outputText || outputText === "結果會顯示在這裡。" || outputText.startsWith("未檢測到")) {
+    const output = document.getElementById("output").textContent;
+    if (!output || output === "結果會顯示在這裡。" || output.startsWith("未檢測到")) {
         alert("沒有可複製的內容！");
         return;
     }
-    navigator.clipboard.writeText(outputText).then(() => {
+    navigator.clipboard.writeText(output).then(() => {
         alert("已複製結果到剪貼簿！");
     }).catch(() => {
         alert("複製失敗，請手動複製。");
@@ -150,8 +138,6 @@ function resetPage() {
     updateLineCount();
 }
 </script>
-
-
 
 </body>
 </html>

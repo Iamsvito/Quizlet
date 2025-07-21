@@ -92,45 +92,63 @@
     <button class="reset" onclick="resetPage()">重置</button>
 
     <script>
-    function formatPairs() {
-        const text = document.getElementById("inputText").value;
-        const lines = text.split(/\n/);
-        let formattedOutput = "";
-        let errorLines = [];
+function formatPairs() {
+    const text = document.getElementById("inputText").value;
+    const lines = text.split(/\n/);
+    let formattedOutput = "";
+    let errorLines = [];
 
-        lines.forEach((line, index) => {
-            const cleanedLine = line.trim();
+    lines.forEach((line, index) => {
+        const cleanedLine = line.trim();
+        if (cleanedLine === "") return;  // 跳過空行
 
-            // 抓出第一段英文 (包含標點與 /)
-            const englishMatch = cleanedLine.match(/^[A-Za-z0-9\s.,!?;:'"()\/\[\]{}<>-]+/);
+        // 抓取中文前的英文（避開中文與標點）
+        const englishMatch = cleanedLine.match(/^([^，。！？；：「」『』（）【】、《》\s\d\p{Script=Han}]+)/u);
 
-            // 英文後面的部分視為中文部分
-            let englishPart = "";
-            let chinesePart = "";
-
-            if (englishMatch) {
-                englishPart = englishMatch[0].trim();
-                chinesePart = cleanedLine.slice(englishPart.length).trim();
-                formattedOutput += `${englishPart},${chinesePart}\n`;
-            } else {
-                errorLines.push({ line: index + 1, content: line });
-            }
-        });
-
-        if (formattedOutput) {
-            document.getElementById("output").textContent = formattedOutput.trim();
+        if (englishMatch) {
+            const englishPart = englishMatch[0].trim();
+            const chinesePart = cleanedLine.slice(englishPart.length).trim();
+            formattedOutput += `${englishPart},${chinesePart}\n`;
         } else {
-            document.getElementById("output").textContent = "未檢測到有效的中英文配對。";
+            errorLines.push({ line: index + 1, content: line });
         }
+    });
 
-        if (errorLines.length > 0) {
-            let errorMessage = "以下行無法處理，已跳過：\n";
-            errorLines.forEach(err => {
-                errorMessage += `第 ${err.line} 行: ${err.content}\n`;
-            });
-            alert(errorMessage.trim());
-        }
+    document.getElementById("output").textContent = formattedOutput.trim() || "未檢測到有效的中英文配對。";
+
+    if (errorLines.length > 0) {
+        let errorMessage = "以下行無法處理，已跳過：\n";
+        errorLines.forEach(err => {
+            errorMessage += `第 ${err.line} 行: ${err.content}\n`;
+        });
+        alert(errorMessage.trim());
     }
+}
+
+function updateLineCount() {
+    const text = document.getElementById("inputText").value;
+    const lineCount = text.split(/\n/).filter(line => line.trim() !== "").length;
+    document.getElementById("lineCount").textContent = `目前行數：${lineCount} 行`;
+}
+
+function copyToClipboard() {
+    const outputText = document.getElementById("output").textContent;
+    if (!outputText || outputText === "結果會顯示在這裡。" || outputText.startsWith("未檢測到")) {
+        alert("沒有可複製的內容！");
+        return;
+    }
+    navigator.clipboard.writeText(outputText).then(() => {
+        alert("已複製結果到剪貼簿！");
+    }).catch(() => {
+        alert("複製失敗，請手動複製。");
+    });
+}
+
+function resetPage() {
+    document.getElementById("inputText").value = "";
+    document.getElementById("output").textContent = "結果會顯示在這裡。";
+    updateLineCount();
+}
 </script>
 
 
